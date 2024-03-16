@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
 
   bool _showFormDataError = false;
   bool _showFormLocationNotFoundError = false;
-  bool _isLoading = false; // Variável para controlar o indicador de loading
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
