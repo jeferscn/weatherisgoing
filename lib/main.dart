@@ -35,194 +35,203 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Weather is Going...'),
         ),
-        body: Center(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: <Widget>[
-                if (_isLoading)
-                  const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Column(
-                      children: [
-                        CircularProgressIndicator(),
-                        Text(
-                          'Carregando...',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+        body: SingleChildScrollView(
+          child: Center(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  if (_isLoading == true)
+                    const Padding(
+                      padding: EdgeInsets.only(
+                          top: 20.0, bottom: 20.0, left: 20.0, right: 30.0),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          Text(
+                            'Carregando...',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                if (!_isLoading &&
-                    actualTemp != null &&
-                    minTemp != null &&
-                    maxTemp != null)
+                  if (_isLoading == false &&
+                      actualTemp != null &&
+                      minTemp != null &&
+                      maxTemp != null)
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _cityController.text,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                              'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
+                          Text(
+                              'Temperatura mínima: ${minTemp!.toStringAsFixed(2)}°C'),
+                          Text(
+                              'Temperatura máxima: ${maxTemp!.toStringAsFixed(2)}°C'),
+                        ],
+                      ),
+                    ),
+                  if (_isLoading == false && _showFormDataError)
+                    const Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text(
+                        'Insira os dados corretamente no formulário e clique em "Enviar"',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  if (_isLoading == false && _showFormLocationNotFoundError)
+                    const Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text(
+                        'Localização não encontrada. Por favor, tente novamente.',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _cityController.text,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                            'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
-                        Text(
-                            'Temperatura mínima: ${minTemp!.toStringAsFixed(2)}°C'),
-                        Text(
-                            'Temperatura máxima: ${maxTemp!.toStringAsFixed(2)}°C'),
-                      ],
-                    ),
-                  ),
-                if (_showFormDataError)
-                  const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Text(
-                      'Insira os dados corretamente no formulário e clique em "Submit"',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 10.0),
+                    child: TextFormField(
+                      textInputAction: TextInputAction.next,
+                      controller: _cityController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter com a cidade',
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor entre com a cidade';
+                        }
+                        return null;
+                      },
                     ),
                   ),
-                if (_showFormLocationNotFoundError)
-                  const Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: Text(
-                      'Localização não encontrada. Por favor, tente novamente.',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 10.0),
+                    child: TextFormField(
+                      textInputAction: TextInputAction.next,
+                      controller: _stateController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter com o Estado',
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor entre com o Estado';
+                        }
+                        return null;
+                      },
                     ),
                   ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 10.0),
-                  child: TextFormField(
-                    controller: _cityController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter com a cidade',
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 10.0),
+                    child: TextFormField(
+                      textInputAction: TextInputAction.done,
+                      controller: _countryController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter com o País',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor entre com o País';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor entre com a cidade';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 10.0),
-                  child: TextFormField(
-                    controller: _stateController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter com o Estado',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor entre com o Estado';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 10.0),
-                  child: TextFormField(
-                    controller: _countryController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter com o País',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor entre com o País';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        _isLoading = true;
-                      });
-
-                      LocationService.fetchCoordinates(_cityController.text,
-                              _stateController.text, _countryController.text)
-                          .then((Map<String, double> coordinates) {
-                        var latitude = coordinates['latitude'] ?? 0.0;
-                        var longitude = coordinates['longitude'] ?? 0.0;
-
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
                         setState(() {
+                          _isLoading = true;
+                        });
+
+                        LocationService.fetchCoordinates(_cityController.text,
+                                _stateController.text, _countryController.text)
+                            .then((Map<String, double> coordinates) {
+                          var latitude = coordinates['latitude'] ?? 0.0;
+                          var longitude = coordinates['longitude'] ?? 0.0;
+
                           if (latitude == -1 || longitude == -1) {
-                            _showFormLocationNotFoundError = true;
-                            actualTemp = null;
-                            minTemp = null;
-                            maxTemp = null;
-                            _isLoading = false;
-                            return;
+                            setState(() {
+                              _isLoading = false;
+                              _showFormLocationNotFoundError = true;
+                              actualTemp = null;
+                              minTemp = null;
+                              maxTemp = null;
+                            });
                           } else {
                             WeatherService.fetchWeatherData(
                                     latitude, longitude, _apiKey)
                                 .then((Map<String, dynamic> weatherData) {
-                              actualTemp =
-                                  kelvinToCelsius(weatherData['main']['temp']);
-                              minTemp = kelvinToCelsius(
-                                  weatherData['main']['temp_min']);
-                              maxTemp = kelvinToCelsius(
-                                  weatherData['main']['temp_max']);
+                              setState(() {
+                                actualTemp = kelvinToCelsius(
+                                    weatherData['main']['temp']);
+                                minTemp = kelvinToCelsius(
+                                    weatherData['main']['temp_min']);
+                                maxTemp = kelvinToCelsius(
+                                    weatherData['main']['temp_max']);
 
-                              _showFormDataError = false;
-                              _showFormLocationNotFoundError = false;
-                              _isLoading = false;
+                                _isLoading = false;
+                                _showFormDataError = false;
+                                _showFormLocationNotFoundError = false;
+                              });
                             });
                           }
                         });
-                      });
-                    } else {
-                      setState(() {
-                        if (_cityController.text.isEmpty ||
-                            _stateController.text.isEmpty ||
-                            _countryController.text.isEmpty) {
-                          _showFormDataError = true;
-                          _isLoading = false;
-                        } else {
-                          _showFormLocationNotFoundError = true;
-                          actualTemp = null;
-                          minTemp = null;
-                          maxTemp = null;
-                          _isLoading = false;
-                        }
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.bold,
+                      } else {
+                        setState(() {
+                          if (_cityController.text.isEmpty ||
+                              _stateController.text.isEmpty ||
+                              _countryController.text.isEmpty) {
+                            _isLoading = false;
+                            _showFormDataError = true;
+                          } else {
+                            _isLoading = false;
+                            _showFormLocationNotFoundError = true;
+                            actualTemp = null;
+                            minTemp = null;
+                            maxTemp = null;
+                          }
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 60, vertical: 10),
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.normal,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6.0),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
+                    child: Text('Enviar'),
                   ),
-                  child: Text('Enviar'),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
