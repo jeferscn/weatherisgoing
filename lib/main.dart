@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:weatherisgoing/services/LocationService.dart';
 import 'package:weatherisgoing/services/WeatherService.dart';
@@ -18,13 +19,13 @@ class _MyAppState extends State<MyApp> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _countryController = TextEditingController();
-  final _apiKey = "4a851493f6b050dbda06a01060475b2d";
+  final _weatherApiKey = "4a851493f6b050dbda06a01060475b2d";
 
   double? actualTemp;
   double? minTemp;
   double? maxTemp;
 
-  bool _showFormDataError = false;
+  bool _showFormInputError = false;
   bool _showFormLocationNotFoundError = false;
   bool _isLoading = false;
 
@@ -41,7 +42,7 @@ class _MyAppState extends State<MyApp> {
               key: _formKey,
               child: Column(
                 children: <Widget>[
-                  if (_isLoading == true)
+                  if (_isLoading)
                     const Padding(
                       padding: EdgeInsets.only(
                           top: 20.0, bottom: 20.0, left: 20.0, right: 30.0),
@@ -49,6 +50,7 @@ class _MyAppState extends State<MyApp> {
                         children: [
                           CircularProgressIndicator(
                             backgroundColor: Colors.blue,
+                            color: Colors.white,
                           ),
                           Text(
                             'Carregando...',
@@ -60,7 +62,9 @@ class _MyAppState extends State<MyApp> {
                         ],
                       ),
                     ),
-                  if (_isLoading == false &&
+                  if (!_isLoading &&
+                      !_showFormLocationNotFoundError &&
+                      !_showFormInputError &&
                       actualTemp != null &&
                       minTemp != null &&
                       maxTemp != null)
@@ -85,7 +89,7 @@ class _MyAppState extends State<MyApp> {
                         ],
                       ),
                     ),
-                  if (_isLoading == false && _showFormDataError)
+                  if (!_isLoading && _showFormInputError)
                     const Padding(
                       padding: EdgeInsets.all(20.0),
                       child: Text(
@@ -96,7 +100,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                     ),
-                  if (_isLoading == false && _showFormLocationNotFoundError)
+                  if (!_isLoading && _showFormLocationNotFoundError)
                     const Padding(
                       padding: EdgeInsets.all(20.0),
                       child: Text(
@@ -116,10 +120,11 @@ class _MyAppState extends State<MyApp> {
                       controller: _cityController,
                       decoration: const InputDecoration(
                         hintText: 'Entre com a cidade',
+                        labelText: 'Cidade',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor entre com a cidade';
+                          return 'Preencha este campo';
                         }
                         return null;
                       },
@@ -134,10 +139,11 @@ class _MyAppState extends State<MyApp> {
                       controller: _stateController,
                       decoration: const InputDecoration(
                         hintText: 'Entre com o Estado',
+                        labelText: 'Estado',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor entre com o Estado';
+                          return 'Preencha este campo';
                         }
                         return null;
                       },
@@ -152,10 +158,11 @@ class _MyAppState extends State<MyApp> {
                       controller: _countryController,
                       decoration: const InputDecoration(
                         hintText: 'Entre com o País',
+                        labelText: 'País',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor entre com o País';
+                          return 'Preencha este campo';
                         }
                         return null;
                       },
@@ -163,62 +170,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        setState(() {
-                          _isLoading = true;
-                        });
-
-                        LocationService.fetchCoordinates(_cityController.text,
-                                _stateController.text, _countryController.text)
-                            .then((Map<String, double> coordinates) {
-                          var latitude = coordinates['latitude'] ?? 0.0;
-                          var longitude = coordinates['longitude'] ?? 0.0;
-
-                          if (latitude == -1 || longitude == -1) {
-                            setState(() {
-                              _isLoading = false;
-                              _showFormLocationNotFoundError = true;
-                              actualTemp = null;
-                              minTemp = null;
-                              maxTemp = null;
-                            });
-                          } else {
-                            WeatherService.fetchWeatherData(
-                                    latitude, longitude, _apiKey)
-                                .then((Map<String, dynamic> weatherData) {
-                              setState(() {
-                                actualTemp = kelvinToCelsius(
-                                    weatherData['main']['temp']);
-                                minTemp = kelvinToCelsius(
-                                    weatherData['main']['temp_min']);
-                                maxTemp = kelvinToCelsius(
-                                    weatherData['main']['temp_max']);
-
-                                _isLoading = false;
-                                _showFormDataError = false;
-                                _showFormLocationNotFoundError = false;
-                              });
-                            });
-                          }
-                        });
-                      } else {
-                        setState(() {
-                          if (_cityController.text.isEmpty ||
-                              _stateController.text.isEmpty ||
-                              _countryController.text.isEmpty) {
-                            _isLoading = false;
-                            _showFormDataError = true;
-                          } else {
-                            _isLoading = false;
-                            _showFormLocationNotFoundError = true;
-                            actualTemp = null;
-                            minTemp = null;
-                            maxTemp = null;
-                          }
-                        });
-                      }
-                    },
+                    onPressed: _submitButtonPressed,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 60, vertical: 10),
@@ -243,12 +195,73 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+
+  Future<void> _submitButtonPressed() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      bool isValidLocation = await validateLocation();
+      if (isValidLocation) {
+        setState(() {
+          _showFormLocationNotFoundError = false;
+        });
+
+        await fetchWeatherData();
+      } else {
+        setState(() {
+          _showFormLocationNotFoundError = true;
+          _isLoading = false;
+        });
+      }
+    } else {
+      setState(() {
+        _showFormInputError = true;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<bool> validateLocation() async {
+    var coordinates = await LocationService.fetchCoordinates(
+        _cityController.text, _stateController.text, _countryController.text);
+    var latitude = coordinates['latitude'] ?? 0.0;
+    var longitude = coordinates['longitude'] ?? 0.0;
+
+    return latitude != -1 && longitude != -1;
+  }
+
+  Future<void> fetchWeatherData() async {
+    var coordinates = await LocationService.fetchCoordinates(
+        _cityController.text, _stateController.text, _countryController.text);
+    var latitude = coordinates['latitude'] ?? 0.0;
+    var longitude = coordinates['longitude'] ?? 0.0;
+
+    if (latitude == -1 || longitude == -1) {
+      setState(() {
+        _isLoading = false;
+        _showFormLocationNotFoundError = true;
+        actualTemp = null;
+        minTemp = null;
+        maxTemp = null;
+      });
+    } else {
+      var weatherData =
+          await WeatherService.fetchWeatherData(latitude, longitude, _weatherApiKey);
+      setState(() {
+        actualTemp = kelvinToCelsius(weatherData['main']['temp']);
+        minTemp = kelvinToCelsius(weatherData['main']['temp_min']);
+        maxTemp = kelvinToCelsius(weatherData['main']['temp_max']);
+
+        _isLoading = false;
+        _showFormInputError = false;
+        _showFormLocationNotFoundError = false;
+      });
+    }
+  }
 }
 
 double kelvinToCelsius(double kelvin) {
   return kelvin - 273.15;
-}
-
-double celsiusToFahrenheit(double celsius) {
-  return (celsius * 9 / 5) + 32;
 }
