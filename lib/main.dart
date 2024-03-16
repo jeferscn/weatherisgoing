@@ -47,7 +47,9 @@ class _MyAppState extends State<MyApp> {
                           top: 20.0, bottom: 20.0, left: 20.0, right: 30.0),
                       child: Column(
                         children: [
-                          CircularProgressIndicator(),
+                          CircularProgressIndicator(
+                            backgroundColor: Colors.blue,
+                          ),
                           Text(
                             'Carregando...',
                             style: TextStyle(
@@ -68,18 +70,18 @@ class _MyAppState extends State<MyApp> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _cityController.text,
+                            'Hoje em ${_cityController.text}',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                              'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
+                              'Temperatura atual: ${actualTemp!.toStringAsFixed(1)}°C'),
                           Text(
-                              'Temperatura mínima: ${minTemp!.toStringAsFixed(2)}°C'),
+                              'Temperatura mínima: ${minTemp!.toStringAsFixed(1)}°C'),
                           Text(
-                              'Temperatura máxima: ${maxTemp!.toStringAsFixed(2)}°C'),
+                              'Temperatura máxima: ${maxTemp!.toStringAsFixed(1)}°C'),
                         ],
                       ),
                     ),
@@ -109,10 +111,11 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
                     child: TextFormField(
+                      textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.next,
                       controller: _cityController,
                       decoration: const InputDecoration(
-                        hintText: 'Enter com a cidade',
+                        hintText: 'Entre com a cidade',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -126,10 +129,11 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
                     child: TextFormField(
+                      textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.next,
                       controller: _stateController,
                       decoration: const InputDecoration(
-                        hintText: 'Enter com o Estado',
+                        hintText: 'Entre com o Estado',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -143,10 +147,11 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
                     child: TextFormField(
+                      textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.done,
                       controller: _countryController,
                       decoration: const InputDecoration(
-                        hintText: 'Enter com o País',
+                        hintText: 'Entre com o País',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
