@@ -233,7 +233,7 @@ class _MyAppState extends State<MyApp> {
                         borderRadius: BorderRadius.circular(6.0),
                       ),
                     ),
-                    child: Text('Enviar'),
+                    child: const Text('Enviar'),
                   ),
                 ],
               ),
