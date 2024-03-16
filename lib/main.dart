@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:weatherisgoing/services/LocationService.dart';
 import 'package:weatherisgoing/services/WeatherService.dart';
@@ -9,7 +7,7 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -28,6 +26,7 @@ class _MyAppState extends State<MyApp> {
 
   bool _showFormDataError = false;
   bool _showFormLocationNotFoundError = false;
+  bool _isLoading = false; // Variável para controlar o indicador de loading
 
   @override
   Widget build(BuildContext context) {
@@ -41,16 +40,38 @@ class _MyAppState extends State<MyApp> {
             key: _formKey,
             child: Column(
               children: <Widget>[
-                if (actualTemp != null && minTemp != null && maxTemp != null)
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        Text(
+                          'Carregando...',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (!_isLoading &&
+                    actualTemp != null &&
+                    minTemp != null &&
+                    maxTemp != null)
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                            _cityController.text),
+                          _cityController.text,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Text(
                             'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
                         Text(
@@ -134,6 +155,10 @@ class _MyAppState extends State<MyApp> {
                 ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        _isLoading = true;
+                      });
+
                       LocationService.fetchCoordinates(_cityController.text,
                               _stateController.text, _countryController.text)
                           .then((Map<String, double> coordinates) {
@@ -146,7 +171,7 @@ class _MyAppState extends State<MyApp> {
                             actualTemp = null;
                             minTemp = null;
                             maxTemp = null;
-
+                            _isLoading = false;
                             return;
                           } else {
                             WeatherService.fetchWeatherData(
@@ -161,6 +186,7 @@ class _MyAppState extends State<MyApp> {
 
                               _showFormDataError = false;
                               _showFormLocationNotFoundError = false;
+                              _isLoading = false;
                             });
                           }
                         });
@@ -171,23 +197,30 @@ class _MyAppState extends State<MyApp> {
                             _stateController.text.isEmpty ||
                             _countryController.text.isEmpty) {
                           _showFormDataError = true;
+                          _isLoading = false;
                         } else {
                           _showFormLocationNotFoundError = true;
                           actualTemp = null;
                           minTemp = null;
                           maxTemp = null;
+                          _isLoading = false;
                         }
                       });
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.black,
-                      textStyle: const TextStyle(
-                          fontSize: 14,
-                          fontStyle: FontStyle.normal,
-                          fontWeight: FontWeight.bold)),
-                  child: Text('Submit'),
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.normal,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                  child: Text('Enviar'),
                 ),
               ],
             ),
