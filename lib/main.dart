@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:weatherisgoing/services/LocationService.dart';
-import 'package:weatherisgoing/models/place.dart';
 import 'package:weatherisgoing/services/WeatherService.dart';
 
 void main() {
@@ -27,6 +26,9 @@ class _MyAppState extends State<MyApp> {
   double? minTemp;
   double? maxTemp;
 
+  bool _showFormDataError = false;
+  bool _showFormLocationNotFoundError = false;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -39,6 +41,47 @@ class _MyAppState extends State<MyApp> {
             key: _formKey,
             child: Column(
               children: <Widget>[
+                if (actualTemp != null && minTemp != null && maxTemp != null)
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                            _cityController.text),
+                        Text(
+                            'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
+                        Text(
+                            'Temperatura mínima: ${minTemp!.toStringAsFixed(2)}°C'),
+                        Text(
+                            'Temperatura máxima: ${maxTemp!.toStringAsFixed(2)}°C'),
+                      ],
+                    ),
+                  ),
+                if (_showFormDataError)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text(
+                      'Insira os dados corretamente no formulário e clique em "Submit"',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                if (_showFormLocationNotFoundError)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Text(
+                      'Localização não encontrada. Por favor, tente novamente.',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 20.0, vertical: 10.0),
@@ -97,21 +140,44 @@ class _MyAppState extends State<MyApp> {
                         var latitude = coordinates['latitude'] ?? 0.0;
                         var longitude = coordinates['longitude'] ?? 0.0;
 
-                        WeatherService.fetchWeatherData(
-                                latitude, longitude, _apiKey)
-                            .then((Map<String, dynamic> weatherData) {
-                          setState(() {
-                            actualTemp =
-                                kelvinToCelsius(weatherData['main']['temp']);
-                            minTemp = kelvinToCelsius(
-                                weatherData['main']['temp_min']);
-                            maxTemp = kelvinToCelsius(
-                                weatherData['main']['temp_max']);
-                          });
+                        setState(() {
+                          if (latitude == -1 || longitude == -1) {
+                            _showFormLocationNotFoundError = true;
+                            actualTemp = null;
+                            minTemp = null;
+                            maxTemp = null;
+
+                            return;
+                          } else {
+                            WeatherService.fetchWeatherData(
+                                    latitude, longitude, _apiKey)
+                                .then((Map<String, dynamic> weatherData) {
+                              actualTemp =
+                                  kelvinToCelsius(weatherData['main']['temp']);
+                              minTemp = kelvinToCelsius(
+                                  weatherData['main']['temp_min']);
+                              maxTemp = kelvinToCelsius(
+                                  weatherData['main']['temp_max']);
+
+                              _showFormDataError = false;
+                              _showFormLocationNotFoundError = false;
+                            });
+                          }
                         });
                       });
                     } else {
-                      print('Form is invalid');
+                      setState(() {
+                        if (_cityController.text.isEmpty ||
+                            _stateController.text.isEmpty ||
+                            _countryController.text.isEmpty) {
+                          _showFormDataError = true;
+                        } else {
+                          _showFormLocationNotFoundError = true;
+                          actualTemp = null;
+                          minTemp = null;
+                          maxTemp = null;
+                        }
+                      });
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -123,25 +189,6 @@ class _MyAppState extends State<MyApp> {
                           fontWeight: FontWeight.bold)),
                   child: Text('Submit'),
                 ),
-                if (actualTemp != null && minTemp != null && maxTemp != null)
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                            _cityController.text),
-                        Text(
-                            'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
-                        Text(
-                            'Temperatura mínima: ${minTemp!.toStringAsFixed(2)}°C'),
-                        Text(
-                            'Temperatura máxima: ${maxTemp!.toStringAsFixed(2)}°C'),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),

@@ -10,11 +10,12 @@ class LocationService {
       List<dynamic> jsonResponse = jsonDecode(response.body);
       if (jsonResponse.isNotEmpty) {
         Map<String, dynamic> firstResult = jsonResponse.first;
-        double latitude = double.parse(firstResult['lat']);
-        double longitude = double.parse(firstResult['lon']);
+        double latitude = double.parse(firstResult['lat'] ?? '-1');
+        double longitude = double.parse(firstResult['lon'] ?? '-1');
+
         return {'latitude': latitude, 'longitude': longitude};
       } else {
-        throw Exception('Localização não encontrada');
+        return {'latitude': -1, 'longitude': -1};
       }
     } else {
       throw Exception('Falha ao carregar os dados da API');
