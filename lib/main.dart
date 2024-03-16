@@ -1,18 +1,31 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:weatherisgoing/rest/LocationService.dart';
+import 'package:weatherisgoing/services/LocationService.dart';
 import 'package:weatherisgoing/models/place.dart';
+import 'package:weatherisgoing/services/WeatherService.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   final _formKey = GlobalKey<FormState>();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _countryController = TextEditingController();
+  final _apiKey = "4a851493f6b050dbda06a01060475b2d";
+
+  double? actualTemp;
+  double? minTemp;
+  double? maxTemp;
 
   @override
   Widget build(BuildContext context) {
@@ -78,9 +91,25 @@ class MyApp extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      print(_cityController.text);
-                      print(_stateController.text);
-                      print(_countryController.text);
+                      LocationService.fetchCoordinates(_cityController.text,
+                              _stateController.text, _countryController.text)
+                          .then((Map<String, double> coordinates) {
+                        var latitude = coordinates['latitude'] ?? 0.0;
+                        var longitude = coordinates['longitude'] ?? 0.0;
+
+                        WeatherService.fetchWeatherData(
+                                latitude, longitude, _apiKey)
+                            .then((Map<String, dynamic> weatherData) {
+                          setState(() {
+                            actualTemp =
+                                kelvinToCelsius(weatherData['main']['temp']);
+                            minTemp = kelvinToCelsius(
+                                weatherData['main']['temp_min']);
+                            maxTemp = kelvinToCelsius(
+                                weatherData['main']['temp_max']);
+                          });
+                        });
+                      });
                     } else {
                       print('Form is invalid');
                     }
@@ -94,6 +123,25 @@ class MyApp extends StatelessWidget {
                           fontWeight: FontWeight.bold)),
                   child: Text('Submit'),
                 ),
+                if (actualTemp != null && minTemp != null && maxTemp != null)
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                            _cityController.text),
+                        Text(
+                            'Temperatura atual: ${actualTemp!.toStringAsFixed(2)}°C'),
+                        Text(
+                            'Temperatura mínima: ${minTemp!.toStringAsFixed(2)}°C'),
+                        Text(
+                            'Temperatura máxima: ${maxTemp!.toStringAsFixed(2)}°C'),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -101,4 +149,12 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+double kelvinToCelsius(double kelvin) {
+  return kelvin - 273.15;
+}
+
+double celsiusToFahrenheit(double celsius) {
+  return (celsius * 9 / 5) + 32;
 }
