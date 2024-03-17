@@ -24,6 +24,8 @@ class _MyAppState extends State<MyApp> {
   double? actualTemp;
   double? minTemp;
   double? maxTemp;
+  String? weather;
+  int? humidity;
 
   bool _showFormInputError = false;
   bool _showFormLocationNotFoundError = false;
@@ -85,7 +87,10 @@ class _MyAppState extends State<MyApp> {
                       !_showFormInputError &&
                       actualTemp != null &&
                       minTemp != null &&
-                      maxTemp != null)
+                      maxTemp != null &&
+                      weather != null &&
+                      humidity != null
+                  )
                     Padding(
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
@@ -98,6 +103,10 @@ class _MyAppState extends State<MyApp> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          Text(
+                              'O tempo está: $weather'),
+                          Text(
+                              'Humidade em: $humidity%'),
                           Text(
                               'Temperatura atual: ${actualTemp!.toStringAsFixed(1)}°C'),
                           Text(
@@ -289,6 +298,8 @@ class _MyAppState extends State<MyApp> {
         actualTemp = null;
         minTemp = null;
         maxTemp = null;
+        weather = null;
+        humidity = null;
       });
     } else {
       var weatherData = await WeatherService.fetchWeatherData(
@@ -297,6 +308,8 @@ class _MyAppState extends State<MyApp> {
         actualTemp = kelvinToCelsius(weatherData['main']['temp']);
         minTemp = kelvinToCelsius(weatherData['main']['temp_min']);
         maxTemp = kelvinToCelsius(weatherData['main']['temp_max']);
+        weather = weatherData['weather'].first['main'];
+        humidity = weatherData['main']['humidity'];
 
         _isLoading = false;
         _showFormInputError = false;
