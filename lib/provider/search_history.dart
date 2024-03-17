@@ -19,6 +19,7 @@ class SearchHistory {
 
   Future<void> saveSearchHistory(String searchLocation) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    await getSearchHistory().then((value) => _searchHistory = value);
     _searchHistory.add(searchLocation);
     String historyJson = jsonEncode(_searchHistory);
     await prefs.setString(_searchHistoryPreferences, historyJson);

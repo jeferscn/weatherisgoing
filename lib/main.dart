@@ -302,9 +302,12 @@ class _MyAppState extends State<MyApp> {
         _showFormInputError = false;
         _showFormLocationNotFoundError = false;
 
-        _searchHistory.saveSearchHistory(
-            '${_cityController.text.trim()}, ${_stateController.text.trim()}, ${_countryController.text.trim()}');
-        _searchHistory.getSearchHistory().then((value) => _searchHistoryList = value);
+        _searchHistory
+            .saveSearchHistory(
+                '${_cityController.text.trim()}, ${_stateController.text.trim()}, ${_countryController.text.trim()}')
+            .then((value) => _searchHistory
+                .getSearchHistory()
+                .then((value) => _searchHistoryList = value));
       });
     }
   }
