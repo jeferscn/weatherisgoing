@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
-import 'package:weatherisgoing/services/LocationService.dart';
-import 'package:weatherisgoing/services/WeatherService.dart';
+import 'package:weatherisgoing/services/location_service.dart';
+import 'package:weatherisgoing/services/weather_service.dart';
+import 'package:weatherisgoing/provider/search_history.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +19,7 @@ class _MyAppState extends State<MyApp> {
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
   final _countryController = TextEditingController();
-  final _weatherApiKey = "4a851493f6b050dbda06a01060475b2d";
+  static const String _weatherApiKey = "4a851493f6b050dbda06a01060475b2d";
 
   double? actualTemp;
   double? minTemp;
@@ -28,6 +28,24 @@ class _MyAppState extends State<MyApp> {
   bool _showFormInputError = false;
   bool _showFormLocationNotFoundError = false;
   bool _isLoading = false;
+
+  List<String> _searchHistoryList = [];
+  late SearchHistory _searchHistory;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeSearchHistory();
+  }
+
+  Future<void> _initializeSearchHistory() async {
+    var searchHistoryList = await SearchHistory().getSearchHistory();
+    var searchHistory = SearchHistory();
+    setState(() {
+      _searchHistoryList = searchHistoryList;
+      _searchHistory = searchHistory;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +107,9 @@ class _MyAppState extends State<MyApp> {
                         ],
                       ),
                     ),
-                  if (!_isLoading && _showFormInputError)
+                  if (!_isLoading &&
+                      _showFormInputError &&
+                      !_showFormLocationNotFoundError)
                     const Padding(
                       padding: EdgeInsets.all(20.0),
                       child: Text(
@@ -187,6 +207,26 @@ class _MyAppState extends State<MyApp> {
                     ),
                     child: const Text('Enviar'),
                   ),
+                  if (_searchHistoryList.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'Histórico de Pesquisas',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Column(
+                            children: _searchHistoryList.reversed
+                                .map((location) => Text(location))
+                                .toList(),
+                          )
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -225,7 +265,9 @@ class _MyAppState extends State<MyApp> {
 
   Future<bool> validateLocation() async {
     var coordinates = await LocationService.fetchCoordinates(
-        _cityController.text, _stateController.text, _countryController.text);
+        _cityController.text.trim(),
+        _stateController.text.trim(),
+        _countryController.text.trim());
     var latitude = coordinates['latitude'] ?? 0.0;
     var longitude = coordinates['longitude'] ?? 0.0;
 
@@ -234,7 +276,9 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> fetchWeatherData() async {
     var coordinates = await LocationService.fetchCoordinates(
-        _cityController.text, _stateController.text, _countryController.text);
+        _cityController.text.trim(),
+        _stateController.text.trim(),
+        _countryController.text.trim());
     var latitude = coordinates['latitude'] ?? 0.0;
     var longitude = coordinates['longitude'] ?? 0.0;
 
@@ -247,8 +291,8 @@ class _MyAppState extends State<MyApp> {
         maxTemp = null;
       });
     } else {
-      var weatherData =
-          await WeatherService.fetchWeatherData(latitude, longitude, _weatherApiKey);
+      var weatherData = await WeatherService.fetchWeatherData(
+          latitude, longitude, _weatherApiKey);
       setState(() {
         actualTemp = kelvinToCelsius(weatherData['main']['temp']);
         minTemp = kelvinToCelsius(weatherData['main']['temp_min']);
@@ -257,6 +301,10 @@ class _MyAppState extends State<MyApp> {
         _isLoading = false;
         _showFormInputError = false;
         _showFormLocationNotFoundError = false;
+
+        _searchHistory.saveSearchHistory(
+            '${_cityController.text.trim()}, ${_stateController.text.trim()}, ${_countryController.text.trim()}');
+        _searchHistory.getSearchHistory().then((value) => _searchHistoryList = value);
       });
     }
   }
